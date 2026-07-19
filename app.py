@@ -492,6 +492,11 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     db.init_db()
+    # Papkalarni tekshirish (debug)
+    print(f"BASE_DIR: {BASE_DIR}")
+    print(f"WEB_DIR: {WEB_DIR}")
+    print(f"WEB_DIR exists: {os.path.exists(WEB_DIR)}")
+    print(f"index.html exists: {os.path.exists(os.path.join(WEB_DIR, 'index.html'))}")
     # Port band bo'lsa SO_REUSEADDR bilan hal qilish
     import socket
     ThreadingHTTPServer.allow_reuse_address = True
