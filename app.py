@@ -44,6 +44,9 @@ import ai
 HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8000"))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Render.com uchun: agar __file__ yo'li noto'g'ri bo'lsa cwd ishlatamiz
+if not os.path.exists(os.path.join(BASE_DIR, "web")):
+    BASE_DIR = os.getcwd()
 WEB_DIR = os.path.join(BASE_DIR, "web")
 SESSION_HOURS = 12
 COOKIE_NAME = "pf_session"
