@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Umrzoq Yulchiyev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
+</head>
+<body>
+  <!-- ====== LOGIN ====== -->
+  <div id="loginView" class="login-view">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <form id="loginForm" class="login-card">
+      <div class="login-logo">UY</div>
+      <h1>Admin Panel</h1>
+      <p class="login-sub">Portfolio boshqaruvi</p>
+      <div class="field">
+        <input type="text" id="loginUser" required autocomplete="username" placeholder="Login" />
+      </div>
+      <div class="field">
+        <input type="password" id="loginPass" required autocomplete="current-password" placeholder="Parol" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Kirish</button>
+      <p class="login-error" id="loginError"></p>
+      <p class="login-hint">Standart: <code>admin / admin123</code></p>
+    </form>
+  </div>
+
+  <!-- ====== DASHBOARD ====== -->
+  <div id="appView" class="app-view" hidden>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-logo">UY</span>
+        <div><strong>Portfolio</strong><small>Admin</small></div>
+      </div>
+      <nav class="sidebar-nav" id="sideNav">
+        <button data-tab="dashboard" class="active"><span class="ico">▦</span> Dashboard</button>
+        <button data-tab="profile"><span class="ico">👤</span> Profil</button>
+        <button data-tab="skills"><span class="ico">📊</span> Ko'nikmalar</button>
+        <button data-tab="projects"><span class="ico">📁</span> Loyihalar</button>
+        <button data-tab="certificates"><span class="ico">🏆</span> Sertifikatlar</button>
+        <button data-tab="experience"><span class="ico">💼</span> Tajriba</button>
+        <button data-tab="blog"><span class="ico">✍️</span> Blog</button>
+        <button data-tab="messages"><span class="ico">✉️</span> Xabarlar <span class="badge-count" id="msgCount"></span></button>
+        <button data-tab="settings"><span class="ico">⚙️</span> Sozlamalar</button>
+      </nav>
+      <div class="sidebar-foot">
+        <a href="/" target="_blank" class="side-link">↗ Saytni ochish</a>
+        <button id="logoutBtn" class="side-link logout">⎋ Chiqish</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn">☰</button>
+        <h2 id="pageTitle">Dashboard</h2>
+        <div class="topbar-right">
+          <span class="ai-status" id="aiStatus"></span>
+        </div>
+      </header>
+
+      <div class="content" id="content"><!-- tab kontenti shu yerga --></div>
+    </div>
+  </div>
+
+  <!-- ====== MODAL ====== -->
+  <div class="modal-overlay" id="modalOverlay" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Tahrirlash</h3>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <form id="modalForm" class="modal-body"><!-- maydonlar --></form>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="modalCancel">Bekor</button>
+        <button class="btn btn-primary" id="modalSave">Saqlash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

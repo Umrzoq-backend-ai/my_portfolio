@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Umrzoq Yulchiyev — Backend & Data Engineer</title>
+  <meta name="description" content="Umrzoq Yulchiyev — Backend & Data Engineer portfolio. Python, FastAPI, PostgreSQL, Data Engineering." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+</head>
+<body>
+  <!-- Yulduzli fon (canvas) -->
+  <canvas id="stars"></canvas>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <!-- Yuklanish indikatori -->
+  <div id="loader"><div class="loader-ring"></div></div>
+
+  <!-- ============ NAVBAR ============ -->
+  <header id="navbar">
+    <nav class="nav container">
+      <a href="#home" class="brand">
+        <span class="brand-logo">UY</span>
+        <span class="brand-text">
+          <span class="brand-name">Umrzoq</span>
+          <span class="brand-role" data-i18n="brandRole">Backend Engineer</span>
+        </span>
+      </a>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home"        data-i18n="navHome">Home</a></li>
+        <li><a href="#projects"    data-i18n="navProjects">Projects</a></li>
+        <li><a href="#certificates" data-i18n="navCerts">Certificates</a></li>
+        <li><a href="#experience"  data-i18n="navResume">Experience</a></li>
+        <li><a href="#profile"     data-i18n="navAI">AI</a></li>
+        <li><a href="#blog"        data-i18n="navBlog">Blog</a></li>
+        <li><a href="#contact"     data-i18n="navAbout">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="lang-toggle" id="langToggle" title="Til / Language">
+          <span class="lang-current">UZ</span>
+        </button>
+        <a href="#contact" class="btn btn-sm btn-primary" data-i18n="navContact">Bog'lanish</a>
+        <button class="burger" id="burger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section id="home" class="hero">
+      <div class="container hero-inner">
+
+        <div class="hero-badge reveal">
+          <span class="dot"></span>
+          <span data-i18n="heroOpen">Open to work</span>
+        </div>
+
+        <h1 class="hero-title reveal" id="heroTitle">
+          Hi, I'm Umrzoq — I Build &amp; Ship Products
+        </h1>
+
+        <p class="hero-sub reveal" id="heroSub"></p>
+
+        <div class="hero-cta reveal">
+          <a href="#projects" class="btn btn-view-projects" data-i18n="heroCta1">
+            View Projects
+            <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="#contact" class="btn btn-get-touch" data-i18n="heroCta2">Get in Touch</a>
+        </div>
+
+        <div class="hero-socials reveal" id="heroSocials"></div>
+      </div>
+
+      <a href="#profile" class="scroll-hint" aria-label="scroll">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+      </a>
+    </section>
+
+    <!-- ============ PROFILE (rasm + AI) ============ -->
+    <section id="profile" class="section">
+      <div class="container">
+        <div class="profile-split reveal">
+
+          <!-- CHAP: matn -->
+          <div class="profile-left">
+            <div class="profile-badge">
+              <span class="dot"></span>
+              <span data-i18n="heroOpen">Open to work</span>
+            </div>
+            <h2 class="profile-name">
+              <span class="pname-first">Umrzoq</span>
+              <span class="pname-last">Yulchiyev</span>
+            </h2>
+            <div class="profile-code-role" id="profileCodeRole">[JUNIOR_BACKEND_&amp;_DATA_ENGINEER]</div>
+            <p class="profile-bio" id="profileBio"></p>
+
+            <div class="profile-stats" id="profileStats"></div>
+
+            <div class="profile-cta">
+              <a href="#projects" class="btn btn-hero-primary" data-i18n="heroCta1">
+                View Projects
+                <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
+              <a href="#contact" class="btn btn-hero-ghost" data-i18n="heroCv">Contact Me</a>
+            </div>
+          </div>
+
+          <!-- O'NG: faqat rasm + terminal -->
+          <div class="profile-right">
+            <div class="hero-photo-wrap">
+              <div class="hero-photo-frame" id="heroPhotoFrame">
+                <div class="hero-photo-placeholder" id="heroPhotoPlaceholder">
+                  <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+              </div>
+              <div class="hero-terminal-bar">
+                <span class="terminal-dot"></span>
+                <span class="terminal-status">sys.status: <span class="terminal-green">ONLINE</span></span>
+                <span class="terminal-loc" id="heroTerminalLoc">LOC: JIZZAKH</span>
+              </div>
+              <!-- AI chat — rasm tagida, bir xil kenglikda -->
+              <div class="hero-ai-mini">
+                <div class="hero-ai-header">
+                  <div class="hero-ai-icon">AI</div>
+                  <div>
+                    <strong>Umrzoq AI</strong>
+                    <span class="hero-ai-online">● Online — ask me anything</span>
+                  </div>
+                </div>
+                <div class="hero-ai-msgs" id="heroAiMsgs"></div>
+                <form class="hero-ai-form" id="heroAiForm">
+                  <input type="text" id="heroAiInput" placeholder="Ask about skills, projects, experience..." autocomplete="off" />
+                  <button type="submit" aria-label="send">
+                    <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ SKILLS ============ -->
+    <section id="skills" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-tag" data-i18n="skillsTag">01 — Skills</span>
+          <h2 class="section-title" data-i18n="skillsTitle">Skills &amp; Expertise</h2>
+          <p class="section-sub" data-i18n="skillsSub">My proficiency across technologies</p>
+        </div>
+        <div class="skills-grid" id="skillsGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ PROJECTS ============ -->
+    <section id="projects" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-tag" data-i18n="projectsTag">02 — Projects</span>
+          <h2 class="section-title" data-i18n="projectsTitle">Projects</h2>
+          <p class="section-sub" data-i18n="projectsSub">Projects I've built</p>
+        </div>
+        <div class="projects-grid" id="projectsGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ CERTIFICATES ============ -->
+    <section id="certificates" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-tag" data-i18n="certsTag">03 — Certificates</span>
+          <h2 class="section-title" data-i18n="certsTitle">Certificates</h2>
+        </div>
+        <div class="certs-grid" id="certsGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ EXPERIENCE ============ -->
+    <section id="experience" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-tag" data-i18n="expTag">04 — Experience</span>
+          <h2 class="section-title" data-i18n="expTitle">Experience &amp; Education</h2>
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </section>
+
+
+    <!-- ============ BLOG ============ -->
+    <section id="blog" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-tag" data-i18n="blogTag">05 — Blog</span>
+          <h2 class="section-title" data-i18n="blogTitle">Blog</h2>
+        </div>
+        <div class="blog-grid" id="blogGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section id="contact" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-tag" data-i18n="contactTag">06 — Contact</span>
+          <h2 class="section-title" data-i18n="contactTitle">Contact Me</h2>
+          <p class="section-sub" data-i18n="contactSub">Got a question? Reach out!</p>
+        </div>
+        <div class="contact-grid">
+          <div class="contact-info reveal" id="contactInfo"></div>
+          <form class="contact-form reveal" id="contactForm">
+            <div class="field">
+              <label data-i18n="formName">Your name</label>
+              <input type="text" name="name" id="cName" required placeholder="John Doe" />
+            </div>
+            <div class="field">
+              <label data-i18n="formEmail">Email</label>
+              <input type="email" name="email" id="cEmail" placeholder="john@example.com" />
+            </div>
+            <div class="field">
+              <label data-i18n="formMessage">Your message</label>
+              <textarea name="message" id="cMessage" rows="4" required placeholder="Hello, I'd like to..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" id="cSubmit" data-i18n="formSend">Send</button>
+            <p class="form-status" id="formStatus"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Umrzoq Yulchiyev</span>
+      <span class="footer-made" data-i18n="footerMade">Python &amp; ❤️ bilan qurilgan</span>
+    </div>
+  </footer>
+
+  <!-- ============ AI CHATBOT WIDGET ============ -->
+  <button id="chatFab" class="chat-fab" aria-label="AI chat">
+    <svg viewBox="0 0 24 24" class="ic-chat"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <svg viewBox="0 0 24 24" class="ic-close"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div id="chatPanel" class="chat-panel">
+    <div class="chat-header">
+      <div class="chat-title">
+        <span class="chat-avatar">AI</span>
+        <div>
+          <strong>Umrzoq AI</strong>
+          <small data-i18n="chatOnline">Onlayn — savol bering</small>
+        </div>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <form class="chat-input" id="chatForm">
+      <input type="text" id="chatText" data-i18n-ph="chatPlaceholder" placeholder="Savolingizni yozing..." autocomplete="off" />
+      <button type="submit" aria-label="send">
+        <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/chatbot.js"></script>
+</body>
+</html>
