@@ -110,6 +110,21 @@ def _openai(key, messages):
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.loads(r.read())["choices"][0]["message"]["content"].strip()
 
+def _groq(key, messages):
+    body = json.dumps({
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role":"system","content":_knowledge()}] + messages,
+        "temperature": 0.6, "max_tokens": 400
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=body,
+        headers={"Authorization":f"Bearer {key}","Content-Type":"application/json"},
+        method="POST")
+    with urllib.request.urlopen(req, timeout=25) as r:
+        return json.loads(r.read())["choices"][0]["message"]["content"].strip()
+
+
 @app.route("/api/chat", methods=["POST","OPTIONS"])
 def chat():
     if request.method == "OPTIONS":
@@ -122,17 +137,25 @@ def chat():
     last = next((m["content"] for m in reversed(msgs) if m["role"]=="user"), "")
 
     reply = ""
-    gk = os.environ.get("GEMINI_API_KEY","")
-    ok = os.environ.get("OPENAI_API_KEY","")
-    print(f"[AI] gemini={'YES('+gk[:8]+')' if gk else 'NO'} openai={'YES' if ok else 'NO'}")
-        if gk:
+    grk = os.environ.get("GROQ_API_KEY","")
+    gk  = os.environ.get("GEMINI_API_KEY","")
+    ok  = os.environ.get("OPENAI_API_KEY","")
+    print(f"[AI] groq={'YES' if grk else 'NO'} gemini={'YES' if gk else 'NO'} openai={'YES' if ok else 'NO'}")
+    try:
+        if grk:
+            reply = _groq(grk, msgs)
+        elif gk:
             reply = _gemini(gk, msgs)
         elif ok:
             reply = _openai(ok, msgs)
     except urllib.error.HTTPError as e:
         print(f"[AI] HTTP {e.code}")
-        if e.code in (429, 503) and ok and gk:
-            try: reply = _openai(ok, msgs)
+        try: print(f"[AI] {e.read().decode()[:150]}")
+        except: pass
+        if e.code in (429, 503):
+            try:
+                if ok: reply = _openai(ok, msgs)
+                elif grk: reply = _groq(grk, msgs)
             except: pass
     except Exception as ex:
         print(f"[AI] error: {ex}")
