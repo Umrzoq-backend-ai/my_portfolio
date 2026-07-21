@@ -124,7 +124,7 @@ def chat():
     reply = ""
     gk = os.environ.get("GEMINI_API_KEY","")
     ok = os.environ.get("OPENAI_API_KEY","")
-    try:
+    print(f"[AI] gemini={'YES('+gk[:8]+')' if gk else 'NO'} openai={'YES' if ok else 'NO'}")
         if gk:
             reply = _gemini(gk, msgs)
         elif ok:
