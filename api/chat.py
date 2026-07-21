@@ -84,6 +84,7 @@ class handler(BaseHTTPRequestHandler):
         last = next((m["content"] for m in reversed(msgs) if m["role"]=="user"),"")
         gk = os.environ.get("GEMINI_API_KEY","")
         ok = os.environ.get("OPENAI_API_KEY","")
+        print(f"[CHAT] gemini_key={'YES' if gk else 'NO'} openai_key={'YES' if ok else 'NO'}")
         reply = ""
         try:
             if gk: reply = _gemini(gk, msgs)
