@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://umrzoq-yulchiyev.vercel.app/sitemap.xml
