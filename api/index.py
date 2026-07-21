@@ -176,7 +176,73 @@ def contact():
 def admin_session():
     if request.method == "OPTIONS":
         return "", 204
-    return jsonify({"authenticated": False})
+    # Cookie tekshirish
+    token = request.cookies.get("pf_session", "")
+    valid = _verify_token(token)
+    return jsonify({"authenticated": bool(valid)})
+
+@app.route("/api/admin/login", methods=["POST","OPTIONS"])
+def admin_login():
+    if request.method == "OPTIONS":
+        return "", 204
+    data = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip()
+    password = (data.get("password") or "")
+    exp_user = os.environ.get("ADMIN_USERNAME", "admin")
+    exp_pass = os.environ.get("ADMIN_PASSWORD", "admin123")
+    import hmac as _hmac
+    u_ok = _hmac.compare_digest(username, exp_user)
+    p_ok = _hmac.compare_digest(password, exp_pass)
+    if not (u_ok and p_ok):
+        return jsonify({"error": "Login yoki parol xato"}), 401
+    token = _make_token(username)
+    resp = jsonify({"ok": True})
+    resp.set_cookie("pf_session", token, max_age=43200,
+                    httponly=True, samesite="Lax", secure=True)
+    return resp
+
+@app.route("/api/admin/logout", methods=["POST","OPTIONS"])
+def admin_logout():
+    if request.method == "OPTIONS":
+        return "", 204
+    resp = jsonify({"ok": True})
+    resp.set_cookie("pf_session", "", max_age=0)
+    return resp
+
+# ---- Token (HMAC) ----
+import base64, time, hashlib, hmac as _hmac_mod
+
+def _get_secret():
+    s = os.environ.get("SECRET_KEY", "")
+    if s:
+        return s.encode()
+    # fallback
+    return (os.environ.get("ADMIN_PASSWORD","admin123") + "_secret").encode()
+
+def _make_token(username):
+    exp = int(time.time()) + 43200
+    payload = base64.urlsafe_b64encode(
+        json.dumps({"u": username, "exp": exp}).encode()).decode().rstrip("=")
+    sig = base64.urlsafe_b64encode(
+        _hmac_mod.new(_get_secret(), payload.encode(), hashlib.sha256).digest()
+    ).decode().rstrip("=")
+    return f"{payload}.{sig}"
+
+def _verify_token(token):
+    try:
+        payload, sig = token.split(".", 1)
+        expected = base64.urlsafe_b64encode(
+            _hmac_mod.new(_get_secret(), payload.encode(), hashlib.sha256).digest()
+        ).decode().rstrip("=")
+        if not _hmac_mod.compare_digest(sig, expected):
+            return None
+        pad = "=" * (-len(payload) % 4)
+        data = json.loads(base64.urlsafe_b64decode(payload + pad))
+        if data["exp"] < int(time.time()):
+            return None
+        return data["u"]
+    except Exception:
+        return None
 
 # Vercel uchun
 handler = app
