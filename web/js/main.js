@@ -513,89 +513,182 @@ function initReveal() {
   $$(".reveal").forEach((el) => revealObserver.observe(el));
 }
 
-// ---- Starfield canvas — parallax scroll + pulsating ----
+// ---- Lightfall Canvas — streak + yulduzlar + glow (ReactBits Lightfall uslubi) ----
 function initStars() {
   const canvas = $("#stars");
   const ctx = canvas.getContext("2d");
-  let stars = [], w, h;
-  let scrollY = 0;
+  let w, h, scrollY = 0, mouse = { x: -9999, y: -9999 };
 
-  // Scroll parallax — yulduzlar 30% tezlikda harakatlanadi
+  // Ranglar (Lightfall uslubi)
+  const COLORS = ["#A6C8FF", "#8b7fff", "#c084fc", "#60a5fa", "#ffffff"];
+  const BG_COLORS = ["rgba(99,102,241,0.12)", "rgba(168,85,247,0.10)", "rgba(96,165,250,0.08)"];
+
   window.addEventListener("scroll", () => { scrollY = window.scrollY; }, { passive: true });
+  window.addEventListener("mousemove", (e) => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
 
-  function mkStar() {
-    const r = Math.random();
-    let radius, baseAlpha, layer;
-    if (r < 0.65) {
-      // Orqa qatlam — kichik, sekin
-      radius = Math.random() * 0.6 + 0.2; baseAlpha = Math.random() * 0.35 + 0.1; layer = 0.15;
-    } else if (r < 0.90) {
-      // O'rta qatlam
-      radius = Math.random() * 1.1 + 0.6; baseAlpha = Math.random() * 0.4 + 0.25; layer = 0.30;
-    } else {
-      // Old qatlam — katta, yorqin, kross effekt
-      radius = Math.random() * 1.8 + 1.2; baseAlpha = Math.random() * 0.3 + 0.5; layer = 0.50;
-    }
+  // ---- Streaklar (yog'du chiziqlar) ----
+  function mkStreak() {
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    const angle = (Math.random() * 30 + 75) * Math.PI / 180; // 75°–105° (pastga)
+    const speed = Math.random() * 2.5 + 1.8;
+    const len   = Math.random() * 180 + 80;
+    const width = Math.random() * 2.5 + 0.8;
+    const glow  = Math.random() * 20 + 8;
     return {
-      x: Math.random() * (w || window.innerWidth),
-      baseY: Math.random() * (h || window.innerHeight) * 3, // butun sahifa bo'yicha
-      r: radius, baseAlpha, layer,
-      pulseSpeed: Math.random() * 0.006 + 0.002,
-      pulsePhase: Math.random() * Math.PI * 2,
-      drift: (Math.random() - 0.5) * 0.04,
+      x: Math.random() * w,
+      y: Math.random() * h * -1.5,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      len, width, color, glow,
+      alpha: 0,
+      fadeIn: Math.random() * 0.04 + 0.02,
+      alive: true,
+      twinkle: Math.random() * 0.06 + 0.01,
+      twinklePhase: Math.random() * Math.PI * 2,
+      layer: Math.random() * 0.3 + 0.1,
     };
   }
 
-  function resize() {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
-    const count = Math.min(400, Math.max(220, Math.floor((w * h) / 4500)));
-    stars = Array.from({ length: count }, () => mkStar());
+  // ---- Yulduzlar ----
+  function mkStar() {
+    const r = Math.random();
+    let radius, baseAlpha, layer;
+    if (r < 0.65)      { radius = Math.random() * 0.6 + 0.2; baseAlpha = Math.random() * 0.3 + 0.1; layer = 0.1; }
+    else if (r < 0.90) { radius = Math.random() * 1.0 + 0.5; baseAlpha = Math.random() * 0.35 + 0.2; layer = 0.25; }
+    else               { radius = Math.random() * 1.5 + 1.0; baseAlpha = Math.random() * 0.25 + 0.45; layer = 0.45; }
+    const color = Math.random() > 0.7 ? COLORS[Math.floor(Math.random() * COLORS.length)] : "rgba(255,255,255,1)";
+    return {
+      x: Math.random() * (w || window.innerWidth),
+      baseY: Math.random() * (h || window.innerHeight) * 3,
+      r: radius, baseAlpha, layer, color,
+      pulseSpeed: Math.random() * 0.005 + 0.002,
+      pulsePhase: Math.random() * Math.PI * 2,
+      drift: (Math.random() - 0.5) * 0.03,
+    };
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, w, h);
+  const MAX_STREAKS = 22;
+  let streaks = [], stars = [];
 
+  function resize() {
+    w = canvas.width  = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    const starCount = Math.min(320, Math.max(160, Math.floor((w * h) / 5500)));
+    stars = Array.from({ length: starCount }, mkStar);
+    if (!streaks.length) {
+      streaks = Array.from({ length: MAX_STREAKS }, () => { const s = mkStreak(); s.y = Math.random() * h; return s; });
+    }
+  }
+
+  function drawStars() {
     stars.forEach((st) => {
-      // Parallax: har qatlam har xil tezlikda harakatlanadi
       const parallaxY = st.baseY - scrollY * st.layer;
-      // Canvas ichida chiqib ketmasligi uchun wrap
       const screenY = ((parallaxY % (h * 2)) + h * 2) % (h * 2) - h * 0.5;
       if (screenY < -10 || screenY > h + 10) return;
 
-      // Pulsating
       st.pulsePhase += st.pulseSpeed;
       const pulse = Math.sin(st.pulsePhase);
-      const alpha = Math.max(0.04, st.baseAlpha + pulse * st.baseAlpha * 0.55);
+      const alpha = Math.max(0.04, st.baseAlpha + pulse * st.baseAlpha * 0.5);
 
-      // Kross nur — faqat katta yulduzlar
-      if (st.r > 1.8) {
+      // Mouse proximity glow
+      const dx = st.x - mouse.x, dy = screenY - mouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const boost = dist < 120 ? (1 - dist/120) * 0.6 : 0;
+
+      if (st.r > 1.5) {
         ctx.save();
-        ctx.globalAlpha = alpha * 0.22;
-        ctx.strokeStyle = "rgba(255,255,255,1)";
-        ctx.lineWidth = 0.5;
-        const len = st.r * 3.5;
+        ctx.globalAlpha = alpha * 0.18;
+        ctx.shadowColor = st.color; ctx.shadowBlur = 10;
+        ctx.strokeStyle = st.color; ctx.lineWidth = 0.4;
+        const len = st.r * 3;
         ctx.beginPath();
-        ctx.moveTo(st.x - len, screenY);
-        ctx.lineTo(st.x + len, screenY);
-        ctx.moveTo(st.x, screenY - len);
-        ctx.lineTo(st.x, screenY + len);
+        ctx.moveTo(st.x - len, screenY); ctx.lineTo(st.x + len, screenY);
+        ctx.moveTo(st.x, screenY - len); ctx.lineTo(st.x, screenY + len);
         ctx.stroke();
         ctx.restore();
       }
 
-      // Yulduz
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, alpha + boost);
+      ctx.shadowColor = st.color; ctx.shadowBlur = st.r > 1 ? 8 : 3;
       ctx.beginPath();
       ctx.arc(st.x, screenY, st.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillStyle = st.color;
       ctx.fill();
+      ctx.restore();
 
-      // Oz drift
       st.x += st.drift;
       if (st.x < -4) st.x = w + 2;
       if (st.x > w + 4) st.x = -2;
     });
+  }
 
+  function drawStreaks() {
+    streaks.forEach((st, i) => {
+      // Mouse interaction
+      const dx = st.x - mouse.x, dy = st.y - mouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const mBoost = dist < 150 ? (1 - dist/150) * 0.8 : 0;
+
+      // Parallax
+      const py = st.y - scrollY * st.layer * 0.3;
+
+      // Twinkle
+      st.twinklePhase += st.twinkle;
+      const twinkle = 0.7 + Math.sin(st.twinklePhase) * 0.3;
+
+      const finalAlpha = Math.min(1, st.alpha * twinkle + mBoost * 0.3);
+      if (finalAlpha < 0.01) { st.x += st.vx; st.y += st.vy; st.alpha += st.fadeIn; return; }
+
+      // Streak chizish
+      const tx = st.x + Math.cos(Math.atan2(st.vy, st.vx) + Math.PI) * st.len;
+      const ty = py  + Math.sin(Math.atan2(st.vy, st.vx) + Math.PI) * st.len;
+
+      ctx.save();
+      const grad = ctx.createLinearGradient(st.x, py, tx, ty);
+      const g2 = ctx.createLinearGradient(st.x, py, tx, ty);
+      g2.addColorStop(0, `${st.color}${Math.round(finalAlpha*255).toString(16).padStart(2,"0")}`);
+      g2.addColorStop(1, `${st.color}00`);
+
+      ctx.strokeStyle = g2;
+      ctx.lineWidth = st.width;
+      ctx.shadowColor = st.color;
+      ctx.shadowBlur = st.glow;
+      ctx.globalAlpha = finalAlpha;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(st.x, py);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+
+      // Bosh nuqtada yorqin nuqta
+      ctx.globalAlpha = finalAlpha * 0.9;
+      ctx.shadowBlur = st.glow * 1.8;
+      ctx.fillStyle = st.color;
+      ctx.beginPath();
+      ctx.arc(st.x, py, st.width * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Harakat
+      st.x += st.vx;
+      st.y += st.vy;
+      st.alpha = Math.min(1, st.alpha + st.fadeIn);
+
+      // Ekrandan chiqsa yangidan yaratish
+      if (st.y > h + st.len + 100 || st.x < -st.len - 100 || st.x > w + st.len + 100) {
+        const ns = mkStreak();
+        ns.x = Math.random() * (w + 200) - 100;
+        ns.y = -st.len - Math.random() * 200;
+        streaks[i] = ns;
+      }
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    drawStars();
+    drawStreaks();
     requestAnimationFrame(draw);
   }
 
