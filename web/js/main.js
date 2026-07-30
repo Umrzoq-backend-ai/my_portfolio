@@ -269,18 +269,28 @@ function renderProjects() {
 }
 
 function renderCerts() {
-  if (!DATA.certificates.length) { $("#certificates").style.display = "none"; return; }
-  $("#certsGrid").innerHTML = DATA.certificates
-    .map((c) => `
+  if (!DATA.certificates.length) { const s = $("#certificates"); if(s) s.style.display = "none"; return; }
+  $("#certsGrid").innerHTML = DATA.certificates.map((c, i) => {
+    const imgPart = c.image
+      ? `<div class="cert-img-wrap">
+           <img src="${c.image}" alt="${c.title}" loading="lazy" />
+           <div class="cert-img-overlay"></div>
+         </div>`
+      : `<div class="cert-no-img">${["🏆","🎓","📜","⭐","🥇","🎯"][i%6]}</div>`;
+    return `
       <div class="cert-card">
-        <div class="cert-icon">${ICONS.award}</div>
-        <div>
-          <h3>${c.title}</h3>
-          <div class="cert-issuer">${c.issuer || ""}</div>
-          ${c.date ? `<div class="cert-date">${c.date}</div>` : ""}
-          ${c.url ? `<a class="cert-link" href="${c.url}" target="_blank" rel="noopener">${t("readMore")} →</a>` : ""}
+        ${imgPart}
+        <div class="cert-body">
+          <div class="cert-icon">${ICONS.award}</div>
+          <div>
+            <h3>${c.title}</h3>
+            <div class="cert-issuer">${c.issuer || ""}</div>
+            ${c.date ? `<div class="cert-date">${c.date}</div>` : ""}
+            ${c.url ? `<a class="cert-link" href="${c.url}" target="_blank" rel="noopener">${t("readMore")}</a>` : ""}
+          </div>
         </div>
-      </div>`).join("");
+      </div>`;
+  }).join("");
 }
 
 function renderExperience() {

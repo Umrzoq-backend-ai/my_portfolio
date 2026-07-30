@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE TABLE IF NOT EXISTS certificates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT, issuer TEXT, date TEXT, url TEXT,
+    image TEXT DEFAULT '',
     sort INTEGER DEFAULT 0
 );
 
@@ -212,7 +213,7 @@ ALLOWED_FIELDS = {
     "projects": ["title_uz", "title_en", "desc_uz", "desc_en", "tags", "github",
                  "demo", "featured", "sort"],
     "skills": ["category", "name", "level", "sort"],
-    "certificates": ["title", "issuer", "date", "url", "sort"],
+    "certificates": ["title", "issuer", "date", "url", "image", "sort"],
     "experience": ["date_label_uz", "date_label_en", "role_uz", "role_en", "org",
                    "points_uz", "points_en", "sort"],
     "blog": ["title_uz", "title_en", "slug", "excerpt_uz", "excerpt_en",

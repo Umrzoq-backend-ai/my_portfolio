@@ -268,6 +268,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._api_upload()
         if path == "/api/admin/blog-upload":
             return self._api_blog_upload()
+        if path == "/api/admin/cert-upload":
+            return self._api_cert_upload()
         if path == "/api/telegram-webhook":
             return self._api_telegram_webhook()
         if path.startswith("/api/admin/"):
@@ -490,7 +492,55 @@ class Handler(BaseHTTPRequestHandler):
 
         self._send_json({"error": "image maydoni topilmadi"}, 400)
 
-    def _api_telegram_webhook(self):
+    def _api_cert_upload(self):
+        """Sertifikat uchun rasm yuklash"""
+        if not self._require_auth():
+            return
+        ctype = self.headers.get("Content-Type", "")
+        if "multipart/form-data" not in ctype:
+            return self._send_json({"error": "multipart kerak"}, 400)
+        boundary = None
+        for part in ctype.split(";"):
+            part = part.strip()
+            if part.startswith("boundary="):
+                boundary = part[9:].strip().encode("utf-8")
+                break
+        if not boundary:
+            return self._send_json({"error": "boundary yo'q"}, 400)
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        if length > 20 * 1024 * 1024:
+            return self._send_json({"error": "Rasm 20MB dan kichik bo'lishi kerak"}, 413)
+        body = self.rfile.read(length)
+        for part in body.split(b"--" + boundary):
+            if b"Content-Disposition" not in part:
+                continue
+            if b'name="image"' not in part:
+                continue
+            sep = b"\r\n\r\n"
+            idx = part.find(sep)
+            if idx == -1:
+                continue
+            header_raw = part[:idx].decode("utf-8", errors="ignore")
+            content = part[idx + 4:]
+            if content.endswith(b"\r\n"):
+                content = content[:-2]
+            ext = ".jpg"
+            if "filename=" in header_raw:
+                fn_parts = [x for x in header_raw.split(";") if "filename=" in x]
+                if fn_parts:
+                    fname = fn_parts[0].strip().split("=", 1)[1].strip().strip('"')
+                    _, e = os.path.splitext(fname)
+                    if e.lower() in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+                        ext = e.lower()
+            import time as _t
+            filename = f"cert_{int(_t.time())}{ext}"
+            cert_dir = os.path.join(WEB_DIR, "assets", "certs")
+            os.makedirs(cert_dir, exist_ok=True)
+            with open(os.path.join(cert_dir, filename), "wb") as f:
+                f.write(content)
+            url = f"/assets/certs/{filename}"
+            return self._send_json({"ok": True, "url": url})
+        self._send_json({"error": "image maydoni topilmadi"}, 400)
         """Telegram bot webhook — kanal postlarini blogga avtomatik qo'shish"""
         # Telegram webhook secret tekshirish
         tg_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")

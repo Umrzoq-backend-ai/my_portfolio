@@ -60,12 +60,16 @@ const SCHEMAS = {
   certificates: {
     title: "Sertifikat",
     fields: [
-      { k: "title",  label: "Nomi",      type: "text", full: true },
-      { k: "issuer", label: "Kim bergan", type: "text" },
-      { k: "date",   label: "Sana",      type: "text" },
-      { k: "url",    label: "Havola",    type: "text", full: true },
-      { k: "sort",   label: "Tartib",    type: "number" },
+      { k: "title",  label: "Nomi",        type: "text", full: true },
+      { k: "issuer", label: "Kim bergan",  type: "text" },
+      { k: "date",   label: "Sana",        type: "text" },
+      { k: "url",    label: "Sertifikat havolasi", type: "text", full: true },
+      { k: "image",  label: "Rasm URL yoki yuklang ↓", type: "text", full: true },
+      { k: "sort",   label: "Tartib",      type: "number" },
     ],
+    hasImageUpload: true,
+    uploadField: "cert",
+    uploadEndpoint: "/api/admin/cert-upload",
   },
   experience: {
     title: "Tajriba",
@@ -326,49 +330,51 @@ function openModal(tab, item) {
   const form = $("#modalForm");
   form.innerHTML = schema.fields.map((f) => fieldHtml(f, item)).join("");
 
-  // Blog uchun rasm upload tugmasi
+  // Rasm upload tugmasi (blog va certificates uchun)
   if (schema.hasImageUpload) {
+    const endpoint = schema.uploadEndpoint || "/api/admin/blog-upload";
     const uploadDiv = document.createElement("div");
     uploadDiv.className = "full";
-    uploadDiv.style.cssText = "grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap";
+    uploadDiv.style.cssText = "grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px";
     uploadDiv.innerHTML = `
       <label class="btn btn-ghost btn-sm" style="cursor:pointer">
         🖼️ Rasm yuklash
-        <input type="file" id="blogImgInput" accept="image/*" style="display:none" />
+        <input type="file" id="imgUploadInput" accept="image/*" style="display:none" />
       </label>
-      <span id="blogImgStatus" style="font-size:13px;color:var(--text-dim)"></span>
-      <div id="blogImgPreview" style="margin-top:8px;width:100%"></div>`;
+      <span id="imgUploadStatus" style="font-size:13px;color:var(--text-dim)"></span>
+      <div id="imgUploadPreview" style="margin-top:8px;width:100%"></div>`;
     form.appendChild(uploadDiv);
 
-    document.getElementById("blogImgInput").addEventListener("change", async function() {
+    document.getElementById("imgUploadInput").addEventListener("change", async function() {
       const file = this.files[0];
       if (!file) return;
-      const status = document.getElementById("blogImgStatus");
-      status.textContent = "Yuklanmoqda...";
+      const status = document.getElementById("imgUploadStatus");
+      status.textContent = "Yuklanmoqda..."; status.style.color = "var(--text-dim)";
       const fd = new FormData();
       fd.append("image", file);
       try {
-        const res = await fetch("/api/admin/blog-upload", { method: "POST", body: fd });
+        const res = await fetch(endpoint, { method: "POST", body: fd });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error);
-        // image maydoniga URL yozish
         const imgField = form.querySelector('[data-k="image"]');
         if (imgField) imgField.value = d.url;
         status.textContent = "✓ Yuklandi: " + d.url;
         status.style.color = "#4ade80";
-        // Preview
-        document.getElementById("blogImgPreview").innerHTML =
-          `<img src="${d.url}" style="max-height:140px;border-radius:10px;border:1px solid rgba(255,255,255,.1)" />`;
+        document.getElementById("imgUploadPreview").innerHTML =
+          `<img src="${d.url}" style="max-height:120px;border-radius:10px;border:1px solid rgba(255,255,255,.1)" />`;
       } catch(e) {
         status.textContent = "✗ " + e.message;
         status.style.color = "#f87171";
       }
     });
 
-    // Mavjud rasm bo'lsa preview ko'rsat
+    // Mavjud rasm preview
     if (item && item.image) {
-      document.getElementById("blogImgPreview").innerHTML =
-        `<img src="${item.image}" style="max-height:140px;border-radius:10px;border:1px solid rgba(255,255,255,.1)" />`;
+      setTimeout(() => {
+        const prev = document.getElementById("imgUploadPreview");
+        if (prev) prev.innerHTML =
+          `<img src="${item.image}" style="max-height:120px;border-radius:10px;border:1px solid rgba(255,255,255,.1)" />`;
+      }, 50);
     }
   }
 
