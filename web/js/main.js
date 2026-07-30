@@ -299,15 +299,112 @@ function renderExperience() {
 }
 
 function renderBlog() {
-  if (!DATA.blog.length) { $("#blog").style.display = "none"; return; }
-  $("#blogGrid").innerHTML = DATA.blog
-    .map((b) => `
-      <div class="blog-card">
-        <div class="blog-date">${(b.created_at || "").split(" ")[0]}</div>
-        <h3>${L(b, "title")}</h3>
-        <p>${L(b, "excerpt")}</p>
-        <span class="blog-read">${t("readMore")} →</span>
-      </div>`).join("");
+  if (!DATA.blog || !DATA.blog.length) {
+    const sec = $("#blog");
+    if (sec) sec.style.display = "none";
+    return;
+  }
+  const grid = $("#blogGrid");
+  if (!grid) return;
+  grid.innerHTML = DATA.blog.map((b, i) => {
+    const date = (b.created_at || "").split(" ")[0];
+    const title = L(b, "title") || b.title_en || b.title_uz || "";
+    const excerpt = L(b, "excerpt") || b.excerpt_en || b.excerpt_uz || "";
+    const isTg = b.telegram_msg_id;
+    const imgWrap = b.image
+      ? `<div class="blog-img-wrap">
+           <img src="${b.image}" alt="${title}" loading="lazy" />
+           <div class="blog-img-overlay"></div>
+           ${isTg ? `<span class="blog-tg-badge"><svg viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>Telegram</span>`:""}
+         </div>`
+      : `<div class="blog-no-img">
+           ${isTg ? "📱" : ["📝","💡","🔧","🚀","📊","⚡"][i%6]}
+           ${isTg ? `<span class="blog-tg-badge" style="top:8px;right:8px"><svg viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>Telegram</span>`:""}
+         </div>`;
+    return `
+      <div class="blog-card reveal" data-blog-id="${b.id}" style="--i:${i}">
+        ${imgWrap}
+        <div class="blog-body">
+          <div class="blog-meta">
+            <span class="blog-date">${date}</span>
+            ${isTg ? `<span class="blog-tag">Telegram</span>` : `<span class="blog-tag">Blog</span>`}
+          </div>
+          <h3>${title}</h3>
+          <p>${excerpt}</p>
+          <div class="blog-footer">
+            <span class="blog-read">
+              ${t("readMore")}
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  // Click → modal ochish
+  $$(".blog-card[data-blog-id]").forEach((card) => {
+    card.addEventListener("click", () => {
+      const id = parseInt(card.dataset.blogId);
+      const b = DATA.blog.find((x) => x.id === id);
+      if (b) openBlogModal(b);
+    });
+  });
+}
+
+// ---- Blog modal ----
+function openBlogModal(b) {
+  let overlay = document.getElementById("blogModalOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "blogModalOverlay";
+    overlay.className = "blog-modal-overlay";
+    overlay.innerHTML = `
+      <div class="blog-modal" id="blogModal">
+        <img id="blogModalImg" class="blog-modal-img" src="" alt="" style="display:none"/>
+        <div class="blog-modal-content">
+          <div class="blog-modal-head">
+            <h2 id="blogModalTitle"></h2>
+            <button class="blog-modal-close" id="blogModalClose">✕</button>
+          </div>
+          <div class="blog-modal-meta" id="blogModalMeta"></div>
+          <div class="blog-modal-body" id="blogModalBody"></div>
+          <div id="blogModalTgLink"></div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeBlogModal(); });
+    document.getElementById("blogModalClose").addEventListener("click", closeBlogModal);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeBlogModal(); });
+  }
+
+  const title = L(b, "title") || "";
+  const body  = L(b, "body")  || L(b, "excerpt") || "";
+  const date  = (b.created_at || "").split(" ")[0];
+
+  document.getElementById("blogModalTitle").textContent = title;
+  document.getElementById("blogModalMeta").textContent = date + (b.telegram_msg_id ? " · Telegram" : " · Blog");
+  document.getElementById("blogModalBody").textContent = body;
+
+  const imgEl = document.getElementById("blogModalImg");
+  if (b.image) { imgEl.src = b.image; imgEl.alt = title; imgEl.style.display = "block"; }
+  else imgEl.style.display = "none";
+
+  const tgDiv = document.getElementById("blogModalTgLink");
+  if (b.telegram_msg_id) {
+    tgDiv.innerHTML = `<a class="blog-modal-tg-link" href="https://t.me/Umrzoq_dev/${b.telegram_msg_id}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="#29b6f6"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+      Telegram'da ko'rish
+    </a>`;
+  } else { tgDiv.innerHTML = ""; }
+
+  overlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeBlogModal() {
+  const ov = document.getElementById("blogModalOverlay");
+  if (ov) ov.classList.remove("open");
+  document.body.style.overflow = "";
 }
 
 function renderContact() {

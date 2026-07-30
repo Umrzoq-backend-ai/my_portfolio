@@ -576,14 +576,173 @@ main { position: relative; z-index: 1; }
 .ai-card .section-title { margin-bottom: 12px; }
 .ai-card .section-sub { margin-bottom: 26px; }
 
-/* ---- Blog ---- */
-.blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
-.blog-card { padding: 26px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); transition: all .3s; cursor: pointer; }
-.blog-card:hover { border-color: var(--border-hover); transform: translateY(-5px); }
-.blog-card .blog-date { font-size: 12.5px; color: var(--text-mute); margin-bottom: 10px; }
-.blog-card h3 { font-size: 1.2rem; margin-bottom: 9px; }
-.blog-card p { color: var(--text-dim); font-size: 14.5px; }
-.blog-read { color: var(--accent); font-size: 13.5px; margin-top: 14px; display: inline-flex; align-items: center; gap: 5px; }
+/* ---- Blog — yangi dizayn: katta kartalar, rasm, gradient hover ---- */
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 28px;
+}
+
+.blog-card {
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .35s cubic-bezier(.22,1,.36,1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.blog-card:hover {
+  border-color: rgba(129,140,248,.4);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px -15px rgba(0,0,0,.6);
+}
+
+/* Rasm qismi */
+.blog-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+.blog-img-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform .5s ease;
+  display: block;
+}
+.blog-card:hover .blog-img-wrap img {
+  transform: scale(1.06);
+}
+
+/* Gradient overlay — rasmdagi yonish effekti */
+.blog-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(99,102,241,.0) 0%,
+    rgba(139,92,246,.0) 50%,
+    rgba(0,255,170,.0) 100%
+  );
+  transition: all .35s ease;
+  mix-blend-mode: screen;
+}
+.blog-card:hover .blog-img-overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(99,102,241,.35) 0%,
+    rgba(139,92,246,.25) 50%,
+    rgba(0,255,170,.15) 100%
+  );
+}
+
+/* Rasmsiz kartalar uchun placeholder */
+.blog-no-img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(0,255,170,.05));
+  font-size: 3rem;
+  flex-shrink: 0;
+}
+
+/* Telegram badge */
+.blog-tg-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: rgba(0,136,204,.85);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.blog-tg-badge svg { width: 13px; height: 13px; fill: #fff; stroke: none; }
+
+/* Kontent qismi */
+.blog-body { padding: 22px; display: flex; flex-direction: column; flex: 1; }
+.blog-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.blog-date { font-size: 12px; color: var(--text-mute); }
+.blog-tag {
+  font-size: 11px; padding: 3px 10px; border-radius: 99px;
+  background: var(--grad-soft); color: var(--accent);
+  font-weight: 600; border: 1px solid rgba(99,102,241,.2);
+}
+.blog-card h3 {
+  font-size: 1.18rem; font-weight: 700; line-height: 1.4;
+  margin-bottom: 10px; color: var(--text);
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.blog-card p {
+  color: var(--text-dim); font-size: 14px; line-height: 1.65;
+  flex: 1;
+  display: -webkit-box; -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.blog-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+.blog-read {
+  color: var(--accent); font-size: 13.5px;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-weight: 500; transition: gap .2s;
+}
+.blog-card:hover .blog-read { gap: 8px; }
+.blog-read svg { width: 15px; height: 15px; }
+
+/* ---- Blog modal (post to'liq o'qish) ---- */
+.blog-modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; visibility: hidden; transition: all .3s;
+}
+.blog-modal-overlay.open { opacity: 1; visibility: visible; }
+.blog-modal {
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: 22px; overflow: hidden;
+  max-width: 720px; width: 100%; max-height: 88vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 40px 80px -20px rgba(0,0,0,.8);
+  transform: translateY(30px) scale(.97);
+  transition: all .35s cubic-bezier(.22,1,.36,1);
+}
+.blog-modal-overlay.open .blog-modal { transform: none; }
+.blog-modal-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; flex-shrink: 0; }
+.blog-modal-content { padding: 28px; overflow-y: auto; flex: 1; }
+.blog-modal-content::-webkit-scrollbar { width: 5px; }
+.blog-modal-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 3px; }
+.blog-modal-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+.blog-modal-head h2 { font-size: 1.6rem; font-weight: 700; line-height: 1.3; flex: 1; }
+.blog-modal-close {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-dim); cursor: pointer; font-size: 18px;
+  display: grid; place-items: center; margin-left: 12px; transition: all .2s;
+}
+.blog-modal-close:hover { color: var(--text); border-color: var(--border-hover); }
+.blog-modal-meta { font-size: 13px; color: var(--text-mute); margin-bottom: 20px; display: flex; gap: 14px; }
+.blog-modal-body { color: var(--text-dim); font-size: 15.5px; line-height: 1.8; white-space: pre-wrap; }
+.blog-modal-body a { color: var(--accent); }
+.blog-modal-tg-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 22px; padding: 10px 18px; border-radius: 10px;
+  background: rgba(0,136,204,.12); border: 1px solid rgba(0,136,204,.3);
+  color: #29b6f6; font-size: 14px; font-weight: 500;
+  text-decoration: none; transition: all .2s;
+}
+.blog-modal-tg-link:hover { background: rgba(0,136,204,.22); }
 
 /* ---- Contact ---- */
 .contact-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; }

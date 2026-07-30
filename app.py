@@ -266,6 +266,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._api_change_password()
         if path == "/api/admin/upload":
             return self._api_upload()
+        if path == "/api/admin/blog-upload":
+            return self._api_blog_upload()
+        if path == "/api/telegram-webhook":
+            return self._api_telegram_webhook()
         if path.startswith("/api/admin/"):
             return self._admin_post(path)
         return self._send_json({"error": "not found"}, 404)
@@ -426,6 +430,118 @@ class Handler(BaseHTTPRequestHandler):
             return self._send_json({"ok": True, "url": url})
 
         self._send_json({"error": "photo maydoni topilmadi"}, 400)
+
+    def _api_blog_upload(self):
+        """Blog uchun rasm yuklash — /api/admin/blog-upload"""
+        if not self._require_auth():
+            return
+        ctype = self.headers.get("Content-Type", "")
+        if "multipart/form-data" not in ctype:
+            return self._send_json({"error": "multipart kerak"}, 400)
+
+        boundary = None
+        for part in ctype.split(";"):
+            part = part.strip()
+            if part.startswith("boundary="):
+                boundary = part[9:].strip().encode("utf-8")
+                break
+        if not boundary:
+            return self._send_json({"error": "boundary yo'q"}, 400)
+
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        if length > 20 * 1024 * 1024:
+            return self._send_json({"error": "Rasm 20MB dan kichik bo'lishi kerak"}, 413)
+
+        body = self.rfile.read(length)
+        delimiter = b"--" + boundary
+        for part in body.split(delimiter):
+            if b"Content-Disposition" not in part:
+                continue
+            if b'name="image"' not in part:
+                continue
+            sep = b"\r\n\r\n"
+            idx = part.find(sep)
+            if idx == -1:
+                continue
+            header_raw = part[:idx].decode("utf-8", errors="ignore")
+            content = part[idx + 4:]
+            if content.endswith(b"\r\n"):
+                content = content[:-2]
+
+            ext = ".jpg"
+            if "filename=" in header_raw:
+                fn_parts = [x for x in header_raw.split(";") if "filename=" in x]
+                if fn_parts:
+                    fname = fn_parts[0].strip().split("=", 1)[1].strip().strip('"')
+                    _, e = os.path.splitext(fname)
+                    if e.lower() in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+                        ext = e.lower()
+
+            import time as _time
+            filename = f"blog_{int(_time.time())}{ext}"
+            blog_dir = os.path.join(WEB_DIR, "assets", "blog")
+            os.makedirs(blog_dir, exist_ok=True)
+            save_path = os.path.join(blog_dir, filename)
+            with open(save_path, "wb") as f:
+                f.write(content)
+
+            url = f"/assets/blog/{filename}"
+            return self._send_json({"ok": True, "url": url})
+
+        self._send_json({"error": "image maydoni topilmadi"}, 400)
+
+    def _api_telegram_webhook(self):
+        """Telegram bot webhook — kanal postlarini blogga avtomatik qo'shish"""
+        # Telegram webhook secret tekshirish
+        tg_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
+        req_secret = self.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+        if tg_secret and req_secret != tg_secret:
+            return self._send_json({"error": "forbidden"}, 403)
+
+        data = self._read_json()
+        # Channel post
+        msg = data.get("channel_post") or data.get("message")
+        if not msg:
+            return self._send_json({"ok": True})
+
+        msg_id = str(msg.get("message_id", ""))
+        text = msg.get("text") or msg.get("caption") or ""
+        date = msg.get("date", 0)
+        photo = msg.get("photo")
+
+        if not text and not photo:
+            return self._send_json({"ok": True})
+
+        # Sarlavha — birinchi qator
+        lines = text.strip().split("\n")
+        title = lines[0][:100] if lines else "Yangi post"
+        excerpt = lines[1][:200] if len(lines) > 1 else text[:200]
+        body = text
+
+        # Telegram post URL
+        tg_channel = os.environ.get("TELEGRAM_CHANNEL", "Umrzoq_dev")
+        tg_link = f"https://t.me/{tg_channel}/{msg_id}"
+
+        # Bir xil telegram_msg_id bo'lsa qo'shma
+        existing = db.fetch_all("blog", order="id")
+        for b in existing:
+            if b.get("telegram_msg_id") == msg_id:
+                return self._send_json({"ok": True, "status": "duplicate"})
+
+        import datetime as _dt
+        db.create("blog", {
+            "title_uz": title, "title_en": title,
+            "slug": f"tg-{msg_id}",
+            "excerpt_uz": excerpt, "excerpt_en": excerpt,
+            "body_uz": body + f"\n\n[Telegram'da ko'rish]({tg_link})",
+            "body_en": body + f"\n\n[View on Telegram]({tg_link})",
+            "image": "",
+            "telegram_msg_id": msg_id,
+            "published": 1,
+            "sort": 0,
+        })
+        print(f"[TELEGRAM] Yangi blog post: {title[:40]}")
+        self._send_json({"ok": True, "status": "created"})
 
     # ================= ADMIN CRUD =================
     def _admin_get(self, path):

@@ -85,14 +85,16 @@ const SCHEMAS = {
     fields: [
       { k: "title_uz",   label: "Sarlavha (UZ)",  type: "text" },
       { k: "title_en",   label: "Sarlavha (EN)",  type: "text" },
-      { k: "slug",       label: "Slug",           type: "text", full: true },
+      { k: "slug",       label: "Slug (URL)",      type: "text", full: true },
       { k: "excerpt_uz", label: "Qisqacha (UZ)",  type: "textarea", full: true },
       { k: "excerpt_en", label: "Qisqacha (EN)",  type: "textarea", full: true },
       { k: "body_uz",    label: "Matn (UZ)",      type: "textarea", full: true },
       { k: "body_en",    label: "Matn (EN)",      type: "textarea", full: true },
+      { k: "image",      label: "Rasm URL yoki yuklang ↓", type: "text", full: true },
       { k: "published",  label: "E'lon qilingan", type: "checkbox" },
       { k: "sort",       label: "Tartib",         type: "number" },
     ],
+    hasImageUpload: true,
   },
 };
 
@@ -279,6 +281,8 @@ function itemRow(tab, it) {
     title = it.role_uz || it.role_en; sub = (it.org || "") + " · " + (it.date_label_uz || "");
   } else if (tab === "blog") {
     title = it.title_uz || it.title_en; sub = it.excerpt_uz || "";
+    tags += it.image ? `<span class="item-tag">🖼️</span>` : "";
+    tags += it.telegram_msg_id ? `<span class="item-tag" style="background:rgba(0,136,204,.15);color:#29b6f6;border-color:rgba(0,136,204,.3)">Telegram</span>` : "";
     tags += it.published ? `<span class="item-tag">E'lon</span>` : `<span class="item-tag unpub">Qoralama</span>`;
   }
   return `<div class="item-card" data-id="${it.id}">
@@ -321,6 +325,53 @@ function openModal(tab, item) {
   $("#modalTitle").textContent = (item ? "Tahrirlash — " : "Yangi — ") + schema.title;
   const form = $("#modalForm");
   form.innerHTML = schema.fields.map((f) => fieldHtml(f, item)).join("");
+
+  // Blog uchun rasm upload tugmasi
+  if (schema.hasImageUpload) {
+    const uploadDiv = document.createElement("div");
+    uploadDiv.className = "full";
+    uploadDiv.style.cssText = "grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap";
+    uploadDiv.innerHTML = `
+      <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+        🖼️ Rasm yuklash
+        <input type="file" id="blogImgInput" accept="image/*" style="display:none" />
+      </label>
+      <span id="blogImgStatus" style="font-size:13px;color:var(--text-dim)"></span>
+      <div id="blogImgPreview" style="margin-top:8px;width:100%"></div>`;
+    form.appendChild(uploadDiv);
+
+    document.getElementById("blogImgInput").addEventListener("change", async function() {
+      const file = this.files[0];
+      if (!file) return;
+      const status = document.getElementById("blogImgStatus");
+      status.textContent = "Yuklanmoqda...";
+      const fd = new FormData();
+      fd.append("image", file);
+      try {
+        const res = await fetch("/api/admin/blog-upload", { method: "POST", body: fd });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error);
+        // image maydoniga URL yozish
+        const imgField = form.querySelector('[data-k="image"]');
+        if (imgField) imgField.value = d.url;
+        status.textContent = "✓ Yuklandi: " + d.url;
+        status.style.color = "#4ade80";
+        // Preview
+        document.getElementById("blogImgPreview").innerHTML =
+          `<img src="${d.url}" style="max-height:140px;border-radius:10px;border:1px solid rgba(255,255,255,.1)" />`;
+      } catch(e) {
+        status.textContent = "✗ " + e.message;
+        status.style.color = "#f87171";
+      }
+    });
+
+    // Mavjud rasm bo'lsa preview ko'rsat
+    if (item && item.image) {
+      document.getElementById("blogImgPreview").innerHTML =
+        `<img src="${item.image}" style="max-height:140px;border-radius:10px;border:1px solid rgba(255,255,255,.1)" />`;
+    }
+  }
+
   $("#modalOverlay").removeAttribute("hidden");
 }
 

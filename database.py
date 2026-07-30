@@ -106,6 +106,8 @@ CREATE TABLE IF NOT EXISTS blog (
     title_uz TEXT, title_en TEXT, slug TEXT,
     excerpt_uz TEXT, excerpt_en TEXT,
     body_uz TEXT, body_en TEXT,
+    image TEXT DEFAULT '',
+    telegram_msg_id TEXT DEFAULT '',
     published INTEGER DEFAULT 1,
     sort INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
@@ -214,7 +216,7 @@ ALLOWED_FIELDS = {
     "experience": ["date_label_uz", "date_label_en", "role_uz", "role_en", "org",
                    "points_uz", "points_en", "sort"],
     "blog": ["title_uz", "title_en", "slug", "excerpt_uz", "excerpt_en",
-             "body_uz", "body_en", "published", "sort"],
+             "body_uz", "body_en", "image", "telegram_msg_id", "published", "sort"],
     "profile": ["name", "nickname", "role_uz", "role_en", "tagline_uz", "tagline_en",
                 "headline_uz", "headline_en", "bio_uz", "bio_en", "location_uz",
                 "location_en", "email", "phone", "github", "linkedin", "telegram",
