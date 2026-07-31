@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS profile (
     bio_uz TEXT, bio_en TEXT,
     location_uz TEXT, location_en TEXT,
     email TEXT, phone TEXT,
-    github TEXT, linkedin TEXT, telegram TEXT,
+    github TEXT, linkedin TEXT, telegram TEXT, instagram TEXT,
     resume_url TEXT, avatar TEXT,
     available INTEGER DEFAULT 1
 );
@@ -221,7 +221,7 @@ ALLOWED_FIELDS = {
     "profile": ["name", "nickname", "role_uz", "role_en", "tagline_uz", "tagline_en",
                 "headline_uz", "headline_en", "bio_uz", "bio_en", "location_uz",
                 "location_en", "email", "phone", "github", "linkedin", "telegram",
-                "resume_url", "avatar", "available"],
+                "instagram", "resume_url", "avatar", "available"],
 }
 
 

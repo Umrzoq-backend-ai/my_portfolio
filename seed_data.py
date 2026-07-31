@@ -27,6 +27,7 @@ PROFILE = {
     "github": "https://github.com/Umrzoq-backend-ai",
     "linkedin": "https://www.linkedin.com/in/umrzoqyulchiyevcode",
     "telegram": "https://t.me/",
+    "instagram": "https://www.instagram.com/valijonivich_u",
     "resume_url": "/assets/resume.pdf",
     "avatar": "/assets/photo.jpg",
     "available": 1,

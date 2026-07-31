@@ -267,5 +267,40 @@ def _verify_token(token):
     except Exception:
         return None
 
+@app.route("/api/admin/blog-upload", methods=["POST","OPTIONS"])
+def blog_upload():
+    if request.method == "OPTIONS":
+        return "", 204
+    # Auth tekshirish
+    token = request.cookies.get("pf_session", "")
+    if not _verify_token(token):
+        return jsonify({"error": "unauthorized"}), 401
+
+    if 'image' not in request.files:
+        return jsonify({"error": "image kerak"}), 400
+
+    file = request.files['image']
+    if not file.filename:
+        return jsonify({"error": "fayl tanlanmagan"}), 400
+
+    # Rasm base64 ga o'tkazish — Vercel'da fayl yozib bo'lmaydi
+    import base64 as _b64file
+    file_data = file.read()
+    if len(file_data) > 5 * 1024 * 1024:  # 5MB limit
+        return jsonify({"error": "Rasm 5MB dan kichik bo'lishi kerak"}), 413
+
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else 'jpg'
+    mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+            "webp": "image/webp", "gif": "image/gif"}.get(ext, "image/jpeg")
+
+    b64 = _b64file.b64encode(file_data).decode()
+    data_url = f"data:{mime};base64,{b64}"
+
+    return jsonify({"ok": True, "url": data_url})
+
+@app.route("/api/admin/cert-upload", methods=["POST","OPTIONS"])
+def cert_upload():
+    return blog_upload()  # Bir xil logika
+
 # Vercel uchun
 handler = app
